@@ -83,11 +83,11 @@ public interface VertxHttpBuildTimeConfig {
      * When enabled, Vert.x installs Netty's {@code HttpContentDecompressor} so request bodies may be
      * decompressed before they reach application code, based on the {@code Content-Encoding} header.
      * <p>
-     * Supported codings match Netty (and therefore depend on the JVM and optional native libraries):
-     * {@code gzip} / {@code x-gzip}, {@code deflate} / {@code x-deflate}, and {@code br} when Brotli is
-     * available. On the JVM, {@code snappy} (Snappy framing format as produced by Netty's
-     * {@code SnappyFrameEncoder}, not arbitrary raw Snappy blocks) and {@code zstd} may also be
-     * supported when Netty's Zstd support is available.
+     * Supported codings match Netty (and therefore depend on optional native libraries for {@code br} and
+     * {@code zstd}): {@code gzip} / {@code x-gzip}, {@code deflate} / {@code x-deflate}, and {@code br} when Brotli is
+     * available. Inbound {@code snappy} uses Netty's Snappy framing format (as produced by Netty's
+     * {@code SnappyFrameEncoder}, not arbitrary raw Snappy blocks) and is supported on both the JVM and GraalVM native
+     * images. On the JVM only, {@code zstd} may also be supported when Netty's Zstd support is available.
      * <p>
      * When this flag is {@code false} (the default), the body bytes are passed through unchanged and
      * {@code Content-Encoding} is not interpreted for inbound decompression.
@@ -97,9 +97,10 @@ public interface VertxHttpBuildTimeConfig {
      * coding (for example framed Snappy is expected but the payload is not a valid frame stream), the
      * connection may be closed without a response.
      * <p>
-     * GraalVM native executables use substitutions that currently only enable gzip, deflate, and Brotli
-     * decoders; other inbound codings such as {@code snappy} or {@code zstd} are not decompressed in
-     * native mode even when this option is {@code true}.
+     * GraalVM native executables use substitutions for Netty's inbound decompressor: {@code gzip},
+     * {@code deflate}, {@code br} (when Brotli loads), and {@code snappy} (framed) are wired. Inbound
+     * {@code zstd} is not included in those substitutions and is not decompressed in native mode even when
+     * this option is {@code true}.
      */
     @WithDefault("false")
     boolean enableDecompression();

@@ -3,6 +3,7 @@ package io.quarkus.netty.runtime.graal;
 import static io.netty.handler.codec.http.HttpHeaderValues.BR;
 import static io.netty.handler.codec.http.HttpHeaderValues.DEFLATE;
 import static io.netty.handler.codec.http.HttpHeaderValues.GZIP;
+import static io.netty.handler.codec.http.HttpHeaderValues.SNAPPY;
 import static io.netty.handler.codec.http.HttpHeaderValues.X_DEFLATE;
 import static io.netty.handler.codec.http.HttpHeaderValues.X_GZIP;
 
@@ -47,6 +48,7 @@ import io.netty.channel.DefaultChannelPromise;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.compression.Brotli;
 import io.netty.handler.codec.compression.BrotliDecoder;
+import io.netty.handler.codec.compression.SnappyFrameDecoder;
 import io.netty.handler.codec.compression.ZlibCodecFactory;
 import io.netty.handler.codec.compression.ZlibWrapper;
 import io.netty.handler.codec.http2.Http2Exception;
@@ -510,6 +512,11 @@ final class Target_io_netty_handler_codec_http_HttpContentDecompressor {
             return new EmbeddedChannel(ctx.channel().id(), ctx.channel().metadata().hasDisconnect(),
                     ctx.channel().config(), new BrotliDecoder());
         }
+        if (SNAPPY.contentEqualsIgnoreCase(contentEncoding)) {
+            // Pure-Java decoder; matches Netty's HttpContentDecompressor so native images accept framed Snappy bodies.
+            return new EmbeddedChannel(ctx.channel().id(), ctx.channel().metadata().hasDisconnect(),
+                    ctx.channel().config(), new SnappyFrameDecoder());
+        }
 
         // 'identity' or unsupported
         return null;
@@ -538,6 +545,10 @@ final class Target_io_netty_handler_codec_http2_DelegatingDecompressorFrameListe
         if (Brotli.isAvailable() && BR.contentEqualsIgnoreCase(contentEncoding)) {
             return new EmbeddedChannel(ctx.channel().id(), ctx.channel().metadata().hasDisconnect(),
                     ctx.channel().config(), new BrotliDecoder());
+        }
+        if (SNAPPY.contentEqualsIgnoreCase(contentEncoding)) {
+            return new EmbeddedChannel(ctx.channel().id(), ctx.channel().metadata().hasDisconnect(),
+                    ctx.channel().config(), new SnappyFrameDecoder());
         }
 
         // 'identity' or unsupported

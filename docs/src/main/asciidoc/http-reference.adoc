@@ -123,12 +123,12 @@ Supported inbound codings follow Netty's implementation:
 * `gzip` / `x-gzip`
 * `deflate` / `x-deflate`
 * `br` when Brotli is available (same optional native stack as for response compression)
-* On the JVM only: `snappy` using Netty's Snappy *framing* format (`SnappyFrameDecoder`). Payloads must be valid framed Snappy (for example as emitted by Netty's `SnappyFrameEncoder`). Raw Snappy block compression without the framing envelope is not accepted; decompression failures can result in the connection being closed without an HTTP response.
+* `snappy` using Netty's Snappy *framing* format (`SnappyFrameDecoder`). Payloads must be valid framed Snappy (for example as emitted by Netty's `SnappyFrameEncoder`). Raw Snappy block compression without the framing envelope is not accepted; decompression failures can result in the connection being closed without an HTTP response. Supported on the JVM and in GraalVM native images when inbound decompression is enabled.
 * On the JVM only: `zstd` when Netty's Zstd support is available at runtime
 
 If the coding is not recognized, Netty passes the request through without decoding; Quarkus does not automatically respond with `415 Unsupported Media Type` in that case.
 
-IMPORTANT: GraalVM native image builds use Netty substitutions that currently wire only gzip, deflate, and Brotli inbound decoders. Other codings such as `snappy` or `zstd` are not decompressed in native executables even when `quarkus.http.enable-decompression=true`.
+IMPORTANT: GraalVM native image builds use Netty substitutions for the inbound decompressor. Inbound `zstd` is not wired there and is not decompressed in native executables even when `quarkus.http.enable-decompression=true`. Inbound `gzip`, `deflate`, `br` (when Brotli loads), and framed `snappy` are supported.
 
 [[static-resources-config]]
 === Other Configurations
