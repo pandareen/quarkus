@@ -80,10 +80,26 @@ public interface VertxHttpBuildTimeConfig {
     boolean enableCompression();
 
     /**
-     * When enabled, vert.x will decompress the request's body if it's compressed.
+     * When enabled, Vert.x installs Netty's {@code HttpContentDecompressor} so request bodies may be
+     * decompressed before they reach application code, based on the {@code Content-Encoding} header.
      * <p>
-     * Note that the compression format (e.g., gzip) must be specified in the Content-Encoding header
-     * in the request.
+     * Supported codings match Netty (and therefore depend on the JVM and optional native libraries):
+     * {@code gzip} / {@code x-gzip}, {@code deflate} / {@code x-deflate}, and {@code br} when Brotli is
+     * available. On the JVM, {@code snappy} (Snappy framing format as produced by Netty's
+     * {@code SnappyFrameEncoder}, not arbitrary raw Snappy blocks) and {@code zstd} may also be
+     * supported when Netty's Zstd support is available.
+     * <p>
+     * When this flag is {@code false} (the default), the body bytes are passed through unchanged and
+     * {@code Content-Encoding} is not interpreted for inbound decompression.
+     * <p>
+     * Unrecognized codings are passed through without decompression (they do not automatically produce
+     * an HTTP error response). If decompression is enabled and the bytes are not valid for the declared
+     * coding (for example framed Snappy is expected but the payload is not a valid frame stream), the
+     * connection may be closed without a response.
+     * <p>
+     * GraalVM native executables use substitutions that currently only enable gzip, deflate, and Brotli
+     * decoders; other inbound codings such as {@code snappy} or {@code zstd} are not decompressed in
+     * native mode even when this option is {@code true}.
      */
     @WithDefault("false")
     boolean enableDecompression();
