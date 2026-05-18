@@ -117,7 +117,7 @@ TIP: Brotli compression is not available by default. You can enable it by settin
 By default (`quarkus.http.enable-decompression=false`), the HTTP server delivers the request body exactly as sent on the wire and does not interpret `Content-Encoding` for inbound decompression.
 
 When you set `quarkus.http.enable-decompression=true`, Vert.x adds Netty's `HttpContentDecompressor`, which may decode the body before it reaches JAX-RS, Reactive Routes, or other application handlers, according to the `Content-Encoding` header.
-For HTTP/1.x, Quarkus replaces that handler with a subclass that logs a **WARN** (category `io.quarkus.vertx.http.runtime.netty.LoggingHttpContentDecompressor`) if decompression fails, before the connection is torn down.
+For HTTP/1.x, Quarkus replaces that handler with a subclass that logs a **WARN** (category `io.quarkus.vertx.http.runtime.netty.LoggingHttpContentDecompressor`) and responds with **`400 Bad Request`** if decompression fails, then closes the connection.
 HTTP/2 inbound decompression uses Vert.x's HTTP/2 stack and does not go through this handler.
 
 Supported inbound codings follow Netty's implementation:
@@ -125,7 +125,7 @@ Supported inbound codings follow Netty's implementation:
 * `gzip` / `x-gzip`
 * `deflate` / `x-deflate`
 * `br` when Brotli is available (same optional native stack as for response compression)
-* `snappy` using Netty's Snappy *framing* format (`SnappyFrameDecoder`). Payloads must be valid framed Snappy (for example as emitted by Netty's `SnappyFrameEncoder`). Raw Snappy block compression without the framing envelope is not accepted; decompression failures can result in the connection being closed without an HTTP response. Supported on the JVM and in GraalVM native images when inbound decompression is enabled.
+* `snappy` using Netty's Snappy *framing* format (`SnappyFrameDecoder`). Payloads must be valid framed Snappy (for example as emitted by Netty's `SnappyFrameEncoder`). Raw Snappy block compression without the framing envelope is not accepted; decompression failures on HTTP/1.x produce `400 Bad Request` with a short plain-text body (and a WARN log); on HTTP/2 the connection may still be closed without a normal HTTP response. Supported on the JVM and in GraalVM native images when inbound decompression is enabled.
 * On the JVM only: `zstd` when Netty's Zstd support is available at runtime
 
 If the coding is not recognized, Netty passes the request through without decoding; Quarkus does not automatically respond with `415 Unsupported Media Type` in that case.

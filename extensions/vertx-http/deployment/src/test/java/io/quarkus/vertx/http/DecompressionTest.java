@@ -58,6 +58,17 @@ public class DecompressionTest {
     }
 
     @Test
+    public void testInvalidGzipReturns400() {
+        RestAssured.given()
+                .header("content-encoding", "gzip")
+                .body("not gzip".getBytes(StandardCharsets.UTF_8))
+                .post("/echo")
+                .then()
+                .statusCode(400)
+                .body(Matchers.containsString("Invalid compressed"));
+    }
+
+    @Test
     public void testSnappyFramedRoundTrip() {
         byte[] input = LONG_STRING.getBytes(StandardCharsets.UTF_8);
         byte[] compressed = snappyFramed(input);
