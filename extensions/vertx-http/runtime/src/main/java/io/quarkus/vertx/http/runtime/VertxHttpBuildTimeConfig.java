@@ -83,11 +83,11 @@ public interface VertxHttpBuildTimeConfig {
      * When enabled, Vert.x installs Netty's {@code HttpContentDecompressor} so request bodies may be
      * decompressed before they reach application code, based on the {@code Content-Encoding} header.
      * <p>
-     * Supported codings match Netty (and therefore depend on optional native libraries for {@code br} and
-     * {@code zstd}): {@code gzip} / {@code x-gzip}, {@code deflate} / {@code x-deflate}, and {@code br} when Brotli is
-     * available. Inbound {@code snappy} uses Netty's Snappy framing format (as produced by Netty's
-     * {@code SnappyFrameEncoder}, not arbitrary raw Snappy blocks) and is supported on both the JVM and GraalVM native
-     * images. On the JVM only, {@code zstd} may also be supported when Netty's Zstd support is available.
+     * Supported codings match Netty on the JVM (and therefore depend on optional native libraries for {@code br}
+     * and {@code zstd}): {@code gzip} / {@code x-gzip}, {@code deflate} / {@code x-deflate}, and {@code br} when Brotli
+     * is available. On the JVM, inbound {@code snappy} uses Netty's Snappy framing format (as produced by Netty's
+     * {@code SnappyFrameEncoder}, not arbitrary raw Snappy blocks). On the JVM, {@code zstd} may also be supported when
+     * Netty's Zstd support is available.
      * <p>
      * When this flag is {@code false} (the default), the body bytes are passed through unchanged and
      * {@code Content-Encoding} is not interpreted for inbound decompression.
@@ -99,12 +99,12 @@ public interface VertxHttpBuildTimeConfig {
      * an HTTP error response). If decompression is enabled and the bytes are not valid for the declared
      * coding (for example framed Snappy is expected but the payload is not a valid frame stream), the
      * connection may be closed without a response on HTTP/2; on HTTP/1.x Quarkus responds with {@code 400 Bad Request}
-     * and closes the connection.
+     * and closes the connection when Netty's decompressor is in use.
      * <p>
-     * GraalVM native executables use substitutions for Netty's inbound decompressor: {@code gzip},
-     * {@code deflate}, {@code br} (when Brotli loads), and {@code snappy} (framed) are wired. Inbound
-     * {@code zstd} is not included in those substitutions and is not decompressed in native mode even when
-     * this option is {@code true}.
+     * GraalVM native executables use substitutions for Netty's inbound decompressor that only wire {@code gzip},
+     * {@code deflate}, and {@code br} (when Brotli loads). Inbound {@code snappy} and {@code zstd} are not decoded in
+     * native mode even when this option is {@code true} (the body is passed through unchanged while the
+     * {@code Content-Encoding} header may still be set).
      */
     @WithDefault("false")
     boolean enableDecompression();
