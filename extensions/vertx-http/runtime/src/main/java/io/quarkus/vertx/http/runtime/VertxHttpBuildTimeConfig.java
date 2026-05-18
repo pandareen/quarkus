@@ -92,6 +92,9 @@ public interface VertxHttpBuildTimeConfig {
      * When this flag is {@code false} (the default), the body bytes are passed through unchanged and
      * {@code Content-Encoding} is not interpreted for inbound decompression.
      * <p>
+     * When {@code true}, HTTP/1.x uses a decompressor that logs inbound decompression failures at WARN (before the
+     * connection may be closed) under {@code io.quarkus.vertx.http.runtime.netty.LoggingHttpContentDecompressor}.
+     * <p>
      * Unrecognized codings are passed through without decompression (they do not automatically produce
      * an HTTP error response). If decompression is enabled and the bytes are not valid for the declared
      * coding (for example framed Snappy is expected but the payload is not a valid frame stream), the

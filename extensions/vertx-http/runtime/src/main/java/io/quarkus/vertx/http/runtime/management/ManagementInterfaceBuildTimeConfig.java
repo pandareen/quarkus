@@ -61,7 +61,8 @@ public interface ManagementInterfaceBuildTimeConfig {
      * decompressed before they reach application code, based on the {@code Content-Encoding} header.
      * <p>
      * Supported codings match Netty (see {@code quarkus.http.enable-decompression} on the primary HTTP
-     * server for the full description, including Snappy framing requirements and GraalVM native limits).
+     * server for the full description, including Snappy framing requirements, GraalVM native limits, and HTTP/1
+     * decompression failure logging).
      */
     @WithDefault("false")
     boolean enableDecompression();

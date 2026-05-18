@@ -117,6 +117,8 @@ TIP: Brotli compression is not available by default. You can enable it by settin
 By default (`quarkus.http.enable-decompression=false`), the HTTP server delivers the request body exactly as sent on the wire and does not interpret `Content-Encoding` for inbound decompression.
 
 When you set `quarkus.http.enable-decompression=true`, Vert.x adds Netty's `HttpContentDecompressor`, which may decode the body before it reaches JAX-RS, Reactive Routes, or other application handlers, according to the `Content-Encoding` header.
+For HTTP/1.x, Quarkus replaces that handler with a subclass that logs a **WARN** (category `io.quarkus.vertx.http.runtime.netty.LoggingHttpContentDecompressor`) if decompression fails, before the connection is torn down.
+HTTP/2 inbound decompression uses Vert.x's HTTP/2 stack and does not go through this handler.
 
 Supported inbound codings follow Netty's implementation:
 
