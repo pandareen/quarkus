@@ -1,7 +1,6 @@
 package io.quarkus.vertx.http;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -70,7 +69,7 @@ public class DecompressionTest {
     }
 
     @Test
-    public void testSnappyFramedRoundTrip() throws IOException {
+    public void testSnappyFramedRoundTrip() {
         byte[] input = LONG_STRING.getBytes(StandardCharsets.UTF_8);
         byte[] compressed = snappyFramed(input);
 
@@ -81,14 +80,17 @@ public class DecompressionTest {
                 .body(Matchers.equalTo(LONG_STRING));
     }
 
-    private static byte[] snappyFramed(byte[] input) throws IOException {
+    private static byte[] snappyFramed(byte[] input) {
         EmbeddedChannel encoder = new EmbeddedChannel(new SnappyFrameEncoder());
         encoder.writeOutbound(Unpooled.wrappedBuffer(input));
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         ByteBuf part;
         while ((part = encoder.readOutbound()) != null) {
             try {
-                part.readBytes(bout, part.readableBytes());
+                int n = part.readableBytes();
+                byte[] chunk = new byte[n];
+                part.readBytes(chunk);
+                bout.write(chunk);
             } finally {
                 part.release();
             }
