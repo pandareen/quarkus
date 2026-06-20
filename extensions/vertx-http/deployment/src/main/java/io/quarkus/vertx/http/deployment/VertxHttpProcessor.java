@@ -39,6 +39,7 @@ import io.quarkus.deployment.annotations.Consume;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.ApplicationStartBuildItem;
+import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.ExecutorBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
@@ -106,6 +107,20 @@ class VertxHttpProcessor {
         //this log is only used to log an error about an incorrect URI, which results in a 400 response
         //we don't want to log this
         return new LogCategoryBuildItem(Http1xServerRequest.class.getName(), Level.OFF);
+    }
+
+    @BuildStep
+    void registerHttpServerWorkerDecompressionFailureLogger(VertxHttpBuildTimeConfig httpBuildTimeConfig,
+            BuildProducer<BytecodeTransformerBuildItem> bytecodeTransformers) {
+        if (!httpBuildTimeConfig.enableDecompression()) {
+            return;
+        }
+        bytecodeTransformers.produce(new BytecodeTransformerBuildItem.Builder()
+                .setClassToTransform("io.vertx.core.http.impl.HttpServerWorker")
+                .setCacheable(true)
+                .setVisitorFunction(
+                        (className, classVisitor) -> HttpServerWorkerDecompressionLoggerBytecode.create(classVisitor))
+                .build());
     }
 
     @BuildStep
